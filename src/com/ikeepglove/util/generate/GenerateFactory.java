@@ -48,7 +48,6 @@ public class GenerateFactory {
 			for (int i = 0; i < length; i++) {
 				Array.set(array, i, generate(cls));
 			}
-			
 			return array;
 
 		} catch (Throwable e) {

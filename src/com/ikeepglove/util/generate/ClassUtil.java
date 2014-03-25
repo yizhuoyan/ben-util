@@ -12,6 +12,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 /**
@@ -33,13 +34,13 @@ public class ClassUtil {
 	 *         class,if cls is null, return list with size 0
 	 */
 	static public List<Class> _superClasses(Class cls) {
-		List<Class> list = new ArrayList<Class>(3);
+		LinkedList<Class> classes = new LinkedList<Class>();
 		while (cls != null) {
-			list.add(cls);
+			classes.add(cls);
 			cls = cls.getSuperclass();
 		}
-		list.remove(list.size() - 1);
-		return list;
+		classes.removeFirst();//delete object class
+		return classes;
 	}
 	/**
 	 * get Field from cls(include subClass) by fieldName 
@@ -50,14 +51,13 @@ public class ClassUtil {
 	static public Field _field(Class cls, String fieldName) {
 		List<Class> superClasses = _superClasses(cls);
 		Field field = null;
-		
-		for (int i = 0, leni = superClasses.size(); i < leni; i++) {
+		for (Class next : superClasses) {
 			try {
-				field = superClasses.get(i).getDeclaredField(fieldName);
+				field = next.getDeclaredField(fieldName);
 				field.setAccessible(true);
 				return field;
 			} catch (NoSuchFieldException e) {
-				continue;
+				continue;//try parent
 			}
 		}
 		return field;
@@ -70,13 +70,13 @@ public class ClassUtil {
 	static public Map<String, Field> fieldsWithoutStatic(Class cls) {
 		Map<String, Field> map = new LinkedHashMap<String, Field>();
 		List<Class> superClasses = _superClasses(cls);
+		Field[] fs=null;
 		for (Class next : superClasses) {
-			Field[] fs = next.getDeclaredFields();
+			fs = next.getDeclaredFields();
 			AccessibleObject.setAccessible(fs, true);
-			for (int i = 0, leni = fs.length; i < leni; i++) {
-				if(fs[i].getModifiers()!=Modifier.STATIC){
-				map.put(fs[i].getName(), fs[i]);}
-			}
+			for (Field f : fs)
+				if(f.getModifiers()!=Modifier.STATIC)
+					map.put(f.getName(), f);
 		}
 		return map;
 	}
@@ -88,13 +88,12 @@ public class ClassUtil {
 	static public Map<String, Field> fields(Class cls) {
 		Map<String, Field> map = new LinkedHashMap<String, Field>();
 		List<Class> superClasses = _superClasses(cls);
+		Field[] fs=null;
 		for (Class next : superClasses) {
-			Field[] fs = next.getDeclaredFields();
+			fs = next.getDeclaredFields();
 			AccessibleObject.setAccessible(fs, true);
-			for (int i = 0, leni = fs.length; i < leni; i++) {
-				map.put(fs[i].getName(), fs[i]);
-			}
-		
+			for (Field f : fs)
+					map.put(f.getName(), f);
 		}
 		return map;
 	}
